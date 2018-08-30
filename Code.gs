@@ -17,12 +17,13 @@ function start(){
   const defaults = getDefaults()
   defaults.window.clear()
   defaults.window_.clear()
+  const numColumns = defaults.window.getNumColumns()
   
   while(true){
     // get a block:Container
     block = new Container(1, 3)
     while(block.hasClearBuffer()){
-      // move it down every 2 seconds
+      // move it down every T seconds
       Utilities.sleep(750)
       block.updatePosition()
       block.moveDown()
@@ -33,10 +34,10 @@ function start(){
     
     // check this row
     var rowSum = getRowSum()
-    if(rowSum == 15){
-      animate()
+    if(rowSum == numColumns){
+     animate()
      // copy paste formatting on the board and board_
-      
+     moveTheTilesDown(block)      
     }
 
     
@@ -61,3 +62,24 @@ function animate(){
   }
 }
 
+function moveTheTilesDown(block){
+  const defaults = getDefaults()
+  const board = defaults.board
+  const board_ = defaults.board_
+  const beginningRow = defaults.window.getRow()
+  const beginningCol = defaults.window.getColumn()
+  const numRowsBefore = block.range.getRow() - beginningRow
+  const numRowsAfter = block.range.getRow() - beginningRow + 1
+  const numCols = defaults.window.getNumColumns()
+  const emptyRow = new Array(defaults.window.getNumColumns()).fill("")
+  
+  
+  var newRangeBoard = board.getRange(beginningRow, beginningCol, numRowsBefore, numCols).getBackgrounds()
+  var newRangeBoard_ = board_.getRange(beginningRow, beginningCol, numRowsBefore, numCols).getValues()
+  newRangeBoard.unshift(emptyRow)
+  newRangeBoard_.unshift(emptyRow)
+  
+  board.getRange(beginningRow, beginningCol, numRowsAfter, numCols).setBackgrounds(newRangeBoard)
+  board_.getRange(beginningRow, beginningCol, numRowsAfter, numCols).setValues(newRangeBoard_)
+    
+}
