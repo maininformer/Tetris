@@ -1,5 +1,6 @@
 function start(){
-  
+  const tiles = ['i', 'j', 'l', 'o', 's', 't', 'z']
+    
   function getRowSum(){
     return defaults
     .board_
@@ -21,7 +22,7 @@ function start(){
   
   while(true){
     // get a block:Container
-    block = new Container(1, 3)
+    block = new Container(tiles[Math.floor(Math.random() * tiles.length)])
     while(block.hasClearBuffer()){
       // move it down every T seconds
       Utilities.sleep(750)
