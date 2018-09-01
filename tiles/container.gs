@@ -1,9 +1,24 @@
+function getBufferMappings(type, rotation){
+  if(!rotation){rotation = 0}
+  rotation = rotation % 360
+  const mappings =  {  // define a buffer for each cell; there are at most 3 bottom cells in each block
+    'i':{0:[[3, 0], [3, 1], [3, 2]], 90:[[3, 1]],         180:[[3, 0], [3, 1], [3, 2]], 270:[[3, 1]]},
+    'j':{0:[[2, 0], [2, 1], [3, 2]], 90:[[3, 0], [3, 1]], 180:[[3, 0], [3, 1], [3, 2]], 270:[[3, 1]]},
+    'l':{0:[[3, 0]],                 90:[[3, 1], [3, 2]], 180:[[3, 0], [3, 1], [3, 2]], 270:[[3, 1]]}, 
+    'o':{0:[[3, 0], [3, 1]],         90:[[3, 0], [3, 1]], 180:[[3, 0], [3, 1]],         270:[[3, 0], [3, 1]]},
+    's':{0:[[3, 0], [3, 1], [2, 2]], 90:[[2, 0], [3, 1]], 180:[[3, 0], [3, 1], [2, 2]], 270:[[2, 0], [3, 1]]},
+    't':{0:[[2, 0], [3, 1], [2, 2]], 90:[[3, 0], [2, 2]], 180:[[3, 0], [3, 1], [3, 2]], 270:[[2, 0], [3, 1]]},
+    'z':{0:[[2, 0], [3, 1], [3, 2]], 90:[[3, 0], [2, 1]], 180:[[2, 0], [3, 1], [3, 2]], 270:[[3, 0], [2, 1]]}
+  }
+  return mappings[type][rotation]
+}
+
 function getType(type, rotation){
   if(!rotation){rotation = 0}
   rotation = rotation % 360
   const mappings =  {
     'i':{0:'B2:D4',   90:'F2:H4',   180:'J2:L4',   270:'N2:P4'},
-    'j':{0:'B6:D8',   90:'F6:H8',   180:'J6:L8',   270:'N2:P8'},
+    'j':{0:'B6:D8',   90:'F6:H8',   180:'J6:L8',   270:'N6:P8'},
     'l':{0:'B10:D12', 90:'F10:H12', 180:'J10:L12', 270:'N10:P12'},
     'o':{0:'B14:D16', 90:'F14:H16', 180:'J14:L16', 270:'N14:P16'},
     's':{0:'B18:D20', 90:'F18:H20', 180:'J18:L20', 270:'N18:P20'},
@@ -12,6 +27,7 @@ function getType(type, rotation){
   }
   return SpreadsheetApp.getActive().getSheetByName('Tiles').getRange(mappings[type][rotation])
 }
+
 
 function Container(type) {
   const defaults = getDefaults()
@@ -28,9 +44,30 @@ function Container(type) {
     this.range = range
   }
   
+  this.getColumnOffset = function (side){
+    return {
+      'i':{0:{'right': 2, 'left':0},   90:{'right': 1, 'left':1},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':1}},
+      'j':{0:{'right': 2, 'left':0},   90:{'right': 1, 'left':0},   180:{'right': 2, 'left':0},   270:{'right': 2, 'left':1}},
+      'l':{0:{'right': 2, 'left':0},   90:{'right': 2, 'left':1},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':0}},
+      'o':{0:{'right': 1, 'left':0},   90:{'right': 1, 'left':0},   180:{'right': 1, 'left':0},   270:{'right': 1, 'left':0}},
+      's':{0:{'right': 2, 'left':0},   90:{'right': 1, 'left':0},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':0}},
+      't':{0:{'right': 2, 'left':0},   90:{'right': 2, 'left':1},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':0}},
+      'z':{0:{'right': 2, 'left':0},   90:{'right': 1, 'left':0},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':0}}
+    }[this.type][this.rotation][side]
+  }
+  
+  this.getRightColumnOffset = function(){
+    return this.getColumnOffset('right')
+  }
+  
+  this.getLeftColumnOffset = function(){
+    return this.getColumnOffset('left')
+  }
+  
   this.move = function(rowOffset, columnOffset){
     this.range.setBackground('white')
     this.setCurrentRange(board.getRange(this.range.getRow() + rowOffset, this.range.getColumn() + columnOffset, this.numRows, this.numColumns))
+    
     getType(this.type, this.rotation).copyTo(this.range)
   }
   
@@ -45,9 +82,9 @@ function Container(type) {
   
   this.updatePosition = function(){
     const movements = getMovements()
-    if (movements.move == 'a' && this.range.getColumn() > defaults.firstColumn){
+    if (movements.move == 'a' && this.range.getColumn() + this.getLeftColumnOffset()> defaults.firstColumn){
       this.move(0, -1)
-    } else if (movements.move == 'd' && this.range.getColumn() + defaults.blockSize < defaults.lastColumn){
+    } else if (movements.move == 'd' && this.range.getColumn() + this.getRightColumnOffset() < defaults.lastColumn){
       this.move(0, 1)
     } else if (movements.move == 's' && this.range.getRow() > defaults.boardLastRow + 3){ // every 's' moves the block down by 2, we don't want it to move offscreen
       this.move(2, 0)
@@ -57,22 +94,30 @@ function Container(type) {
     movements.clearMovements()
   }
   
-  this.getBuffer = function (){
-   return board_.getRange(
-     this.range.getRow() + this.numRows, 
-     this.range.getColumn(),
-     1, 
-     this.numColumns)
+  this.getBuffers = function (){
+   const buffers = []
+   const addresses = getBufferMappings(this.type, this.rotation)
+   const range = this.range
+   return addresses.map(function(address){
+     return board_.getRange(
+       range.getRow() + address[0], // rows offset 
+       range.getColumn() + address[1], // column offset
+       1, 
+       1)   
+   })
   }
   
   this.hasClearBuffer = function (){
-    buffer = this.getBuffer()
-    bufferValues = buffer.getValues()[0] // there is always only one row in the buffer
-    if(buffer.getRow() > defaults.boardLastRow){ return false }
-    for(var r=0; r < bufferValues.length; r++){
-      if(bufferValues[r]==1){ return false }
+    buffers = this.getBuffers()
+    for(var i=0; i<buffers.length; i++){
+      buffer = buffers[i]
+      bufferValues = buffer.getValues()[0] // there is always only one row in the buffer
+      if(buffer.getRow() > defaults.boardLastRow){ return false }
+      for(var r=0; r < bufferValues.length; r++){
+        if(bufferValues[r]==1){ return false }
+      }
+      return true
     }
-    return true
   }
   
   this.save = function() {
@@ -81,7 +126,6 @@ function Container(type) {
       .getBackgrounds()
       .map(function(row){
         return row.map(function(cell){
-          Logger.log(cell)
           if(cell == '#ffffff'){
             return ''
           } else {

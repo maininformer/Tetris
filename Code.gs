@@ -25,7 +25,7 @@ function start(){
     block = new Container(tiles[Math.floor(Math.random() * tiles.length)])
     while(block.hasClearBuffer()){
       // move it down every T seconds
-      Utilities.sleep(750)
+      Utilities.sleep(1500)
       block.updatePosition()
       block.moveDown()
       SpreadsheetApp.flush()
