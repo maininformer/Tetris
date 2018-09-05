@@ -1,3 +1,6 @@
+// TODO: if the buffer is not clear, copy the buffer, paste the block, paste the copied buffer, where this blocks buffer offset row is < 2
+// The side way moves of the blocks will still be broken
+
 function getBufferMappings(type, rotation){
   if(!rotation){rotation = 0}
   rotation = rotation % 360
@@ -17,11 +20,11 @@ function getType(type, rotation){
   if(!rotation){rotation = 0}
   rotation = rotation % 360
   const mappings =  {
-    'i':{0:'B2:D4',   90:'F2:H4',   180:'J2:L4',   270:'N2:P4'},
-    'j':{0:'B6:D8',   90:'F6:H8',   180:'J6:L8',   270:'N6:P8'},
-    'l':{0:'B10:D12', 90:'F10:H12', 180:'J10:L12', 270:'N10:P12'},
-    'o':{0:'B14:D16', 90:'F14:H16', 180:'J14:L16', 270:'N14:P16'},
-    's':{0:'B18:D20', 90:'F18:H20', 180:'J18:L20', 270:'N18:P20'},
+    'i':{0:[['B4:D4']],                90:[['G2:G4']],                180:[['J4:L4']],                270:[['O2:O4']]},
+    'j':{0:[['B7:D7'], ['D8:D8']],     90:[['F8:F8'],['G6:G8']],      180:[['J7:J7'],['J8:L8']],      270:[['O6:O8'],['P6:P6']]},
+    'l':{0:[['B12:B12'], ['B11:D11']], 90:[['G10:G12'], ['H12:H12']], 180:[['J12:L12'], ['L11:L11']], 270:[['O10:O12'], ['N10:N10']]},
+    'o':{0:[['B15:C15'],['B16:C16']],  90:[['F15:G15'],['F16:G16']],  180:[['J15:K15'],['J16:K16']],  270:[['N15:O15'],['N16:O16']]},
+    's':{0:'B18:D20', 90:'F18:H20', 180:'18:L20', 270:'N18:P20'},
     't':{0:'B22:D24', 90:'F22:H24', 180:'J22:L24', 270:'N22:P24'},
     'z':{0:'B26:D28', 90:'F26:H28', 180:'J26:L28', 270:'N26:P28'}
   }
