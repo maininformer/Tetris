@@ -24,11 +24,13 @@ function getType(type, rotation){
     'j':{0:[['B7:D7'], ['D8:D8']],     90:[['F8:F8'],['G6:G8']],      180:[['J7:J7'],['J8:L8']],      270:[['O6:O8'],['P6:P6']]},
     'l':{0:[['B12:B12'], ['B11:D11']], 90:[['G10:G12'], ['H12:H12']], 180:[['J12:L12'], ['L11:L11']], 270:[['O10:O12'], ['N10:N10']]},
     'o':{0:[['B15:C15'],['B16:C16']],  90:[['F15:G15'],['F16:G16']],  180:[['J15:K15'],['J16:K16']],  270:[['N15:O15'],['N16:O16']]},
-    's':{0:'B18:D20', 90:'F18:H20', 180:'18:L20', 270:'N18:P20'},
-    't':{0:'B22:D24', 90:'F22:H24', 180:'J22:L24', 270:'N22:P24'},
-    'z':{0:'B26:D28', 90:'F26:H28', 180:'J26:L28', 270:'N26:P28'}
+    's':{0:[['C19:D19'], ['B20:C20']], 90:[['F18:F19'], ['G19:G20']], 180:[['K19:L19'], ['J20:K20']], 270:[['N18:N19'], ['O19:O20']]},
+    't':{0:[['B23:D23'], ['C24:C24']], 90:[['G22:G24'], ['H23:H23']], 180:[['J24:L24'], ['K23:K23']], 270:[['O22:O24'], ['N23:N23']]},
+    'z':{0:[['C19:D19'], ['B20:C20']], 90:[['F18:F19'], ['G19:G20']], 180:[['K19:L19'], ['J20:K20']], 270:[['N18:N19'], ['O19:O20']]}
   }
-  return SpreadsheetApp.getActive().getSheetByName('Tiles').getRange(mappings[type][rotation])
+  
+  const ranges = mappings[type][rotation].map(function(r){return SpreadsheetApp.getActive().getSheetByName('Tiles').getRange(r[0])})
+  return ranges
 }
 
 
@@ -41,7 +43,8 @@ function Container(type) {
   this.range = board.getRange(defaults.startRow, defaults.startColumn, this.numRows, this.numColumns)
   this.rotation = 0
   this.type = type
-  getType(this.type, this.rotation).copyTo(this.range)
+  
+  getType(this.type, this.rotation).forEach(function(r){r.copyTo(this.range)}.bind(this))
   
   this.setCurrentRange = function (range){
     this.range = range
