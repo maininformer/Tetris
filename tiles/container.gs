@@ -1,6 +1,3 @@
-// TODO: if the buffer is not clear, copy the buffer, paste the block, paste the copied buffer, where this blocks buffer offset row is < 2
-// The side way moves of the blocks will still be broken
-
 function getBufferMappings(type, rotation){
   if(!rotation){rotation = 0}
   rotation = rotation % 360
@@ -43,11 +40,12 @@ function getOffsets(type, rotation){
     's':{0:[[0, 0, 1, 2], [1, -1, 1, 2]], 90:[[0, 0, 2, 1], [1, 1, 2, 1]],   180:[[0, 0, 1, 2], [1, -1, 1, 2]],   270:[[0, 0, 2, 1], [1, 1, 2, 1]]},
     't':{0:[[0, 0, 1, 3], [1, 1, 1, 1]],  90:[[0, 0, 3, 1], [1, 1, 1, 1]],   180:[[0, 0, 1, 3], [-1, 1, 1, 1]],   270:[[0, 0, 3, 1], [1, -1, 1, 1]]},
     'z':{0:[[0, 0, 1, 2], [1, 1, 1, 2]],  90:[[0, 0, 2, 1], [1, -1, 2, 1]],  180: [[0, 0, 1, 2], [1, 1, 1, 2]],   270:[[0, 0, 2, 1], [1, -1, 2, 1]]}
-  } 
+  }
+  return offsets[type][rotation]
 }
 
 
-function getType(type, rotation){
+function getOriginalStartPoint(type, rotation){
   // the positions from which relative addressing is used for the whole block, left first and then up first corner
   const originalHinges = {  // [row, column]
     'i':{0:[4, 2],  90:[2, 7],  180:[4, 10],    270:[2, 15]},
@@ -59,7 +57,7 @@ function getType(type, rotation){
     'z':{0:[27, 2], 90:[26, 7], 180:[27, 2],    270:[26, 7]}
   }
   
-  
+  return originalHinges[type][rotation]
 }
 
 
@@ -67,16 +65,23 @@ function Container(type) {
   const defaults = getDefaults()
   const board = defaults.board
   const board_ = defaults.board_
-
-  this.TODO = board.getRange(defaults.startRow, defaults.startColumn, 1, 1) 
+  const tiles = defaults.tiles
+  this.startingPoint = board.getRange(defaults.startRow, defaults.startColumn, 1, 1)
   this.rotation = 0
   this.type = type
-  this.ranges = getType(type)  // this is the block
   
-  getType(this.type, this.rotation).forEach(function(r){r.copyTo(this.range)}.bind(this))
+  // Copy the original tile color to the board and also set the range in this.ranges
+  const tileHinge = tiles.getRange(getOriginalStartPoint(this.type, this.rotation)[0], getOriginalStartPoint(this.type, this.rotation)[1])
+  this.ranges = getOffsets(this.type, this.rotation)
+    .map(function(offset){
+      Logger.log([board, this.startingPoint.getRow(), this.startingPoint.getColumn(), offset])
+      const newRange = this.startingPoint.offset(offset[0], offset[1], offset[2], offset[3])
+      tileHinge.offset(offset[0], offset[1], offset[2], offset[3]).copyTo(newRange)
+      return newRange
+    }, this)  
   
-  this.setCurrentRange = function (range){
-    this.range = range
+  this.setCurrentRange = function (ranges){
+    this.ranges = ranges
   }
   
   this.getColumnOffset = function (side){

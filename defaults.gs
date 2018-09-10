@@ -1,10 +1,12 @@
 function getDefaults() {
   const BOARD_NAME = 'Board'
   const BOARD__NAME = 'Board_'
+  const TILES_NAME = 'Tiles'
   const WINDOW_ADDRESS = 'Q4:AE24'
   
   const board = SpreadsheetApp.getActive().getSheetByName(BOARD_NAME)
   const board_ = SpreadsheetApp.getActive().getSheetByName(BOARD__NAME)
+  const tiles = SpreadsheetApp.getActive().getSheetByName(TILES_NAME)
   const window = board.getRange(WINDOW_ADDRESS)
   const window_ = board_.getRange(WINDOW_ADDRESS)
   
@@ -16,7 +18,8 @@ function getDefaults() {
     firstColumn: 17,
     lastColumn: 31,
     startColumn: 23, // V
-    startRow: 4, 
+    startRow: 4,
+    tiles: tiles,
     window: window,
     window_: window_
   }
