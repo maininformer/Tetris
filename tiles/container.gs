@@ -48,7 +48,7 @@ function Container(type) {
   const board = defaults.board
   const board_ = defaults.board_
   const tiles = defaults.tiles
-  this.startingPoint = board.getRange(defaults.startRow, defaults.startColumn, 1, 1)
+  this.hinge = board.getRange(defaults.startRow, defaults.startColumn, 1, 1)
   this.rotation = 0
   this.type = type
   
@@ -56,14 +56,13 @@ function Container(type) {
   const tileHinge = tiles.getRange(getOriginalStartPoint(this.type, this.rotation)[0], getOriginalStartPoint(this.type, this.rotation)[1])
   this.ranges = getOffsets(this.type, this.rotation)
     .map(function(offset){
-      Logger.log([board, this.startingPoint.getRow(), this.startingPoint.getColumn(), offset])
-      const newRange = this.startingPoint.offset(offset[0], offset[1], offset[2], offset[3])
+      const newRange = this.hinge.offset(offset[0], offset[1], offset[2], offset[3])
       tileHinge.offset(offset[0], offset[1], offset[2], offset[3]).copyTo(newRange)
       return newRange
     }, this)  
   
-  this.setCurrentRange = function (ranges){
-    this.ranges = ranges
+  this.setHinge = function (hinge){
+    this.hinge = hinge
   }
   
   this.getColumnOffset = function (side){
@@ -119,13 +118,13 @@ function Container(type) {
   this.getBuffers = function (){
    const buffers = []
    const addresses = getBufferMappings(this.type, this.rotation)
-   const range = this.range
+   const hinge = this.hinge
    return addresses.map(function(address){
+     offset = hinge.offset(address[0], address[1])
      return board_.getRange(
-       range.getRow() + address[0], // rows offset 
-       range.getColumn() + address[1], // column offset
-       1, 
-       1)   
+       offset.getRow(),   // rows offset 
+       offset.getColumn() // column offset
+     )   
    })
   }
   
