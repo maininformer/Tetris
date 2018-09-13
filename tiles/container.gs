@@ -52,15 +52,17 @@ function Container(type) {
   this.rotation = 0
   this.type = type
   
-  // Copy the original tile color to the board and also set the range in this.ranges
-  const tileHinge = tiles.getRange(getOriginalStartPoint(this.type, this.rotation)[0], getOriginalStartPoint(this.type, this.rotation)[1])
-  this.ranges = getOffsets(this.type, this.rotation)
-    .map(function(offset){
+  this.pasteTile= function(){
+    // Copy a tile from tileHinge, using offsets, to this.hinge using same offsets
+    const tileHinge = tiles.getRange(getOriginalStartPoint(this.type, this.rotation)[0], getOriginalStartPoint(this.type, this.rotation)[1])  
+    getOffsets(this.type, this.rotation)
+    .forEach(function(offset){
       const newRange = this.hinge.offset(offset[0], offset[1], offset[2], offset[3])
       tileHinge.offset(offset[0], offset[1], offset[2], offset[3]).copyTo(newRange)
-      return newRange
-    }, this)  
-  
+    }, this)
+  }
+
+  this.pasteTile()
   this.setHinge = function (hinge){
     this.hinge = hinge
   }
@@ -85,11 +87,19 @@ function Container(type) {
     return this.getColumnOffset('left')
   }
   
+  this.clearTile = function(){
+    getOffsets(this.type, this.rotation)
+      .map(function(offset){
+        this.hinge
+          .offset(offset[0], offset[1], offset[2], offset[3])
+          .setBackground('white') 
+      }, this)
+  }
+  
   this.move = function(rowOffset, columnOffset){
-    this.range.setBackground('white')
-    this.setCurrentRange(board.getRange(this.range.getRow() + rowOffset, this.range.getColumn() + columnOffset, this.numRows, this.numColumns))
-    
-    getType(this.type, this.rotation).copyTo(this.range)
+    this.clearTile()
+    this.setHinge(board.getRange(this.hinge.getRow() + rowOffset, this.hinge.getColumn() + columnOffset))
+    this.pasteTile()
   }
   
   this.moveDown = function (){
