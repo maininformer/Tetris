@@ -108,16 +108,17 @@ function Container(type) {
   
   this.rotate = function(){
     this.rotation = this.rotation + 90
-    getType(this.type, this.rotation).copyTo(this.range)
+    this.clearTile()
+    this.pasteTile()
   }
   
   this.updatePosition = function(){
     const movements = getMovements()
-    if (movements.move == 'a' && this.range.getColumn() + this.getLeftColumnOffset()> defaults.firstColumn){
+    if (movements.move == 'a' && this.hinge.getColumn() + this.getLeftColumnOffset()> defaults.firstColumn){
       this.move(0, -1)
-    } else if (movements.move == 'd' && this.range.getColumn() + this.getRightColumnOffset() < defaults.lastColumn){
+    } else if (movements.move == 'd' && this.hinge.getColumn() + this.getRightColumnOffset() < defaults.lastColumn){
       this.move(0, 1)
-    } else if (movements.move == 's' && this.range.getRow() > defaults.boardLastRow + 3){ // every 's' moves the block down by 2, we don't want it to move offscreen
+    } else if (movements.move == 's' && this.hinge.getRow() > defaults.boardLastRow + 3){ // every 's' moves the block down by 2, we don't want it to move offscreen
       this.move(2, 0)
     } else if (movements.move == 'w'){
       this.rotate()
