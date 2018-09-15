@@ -1,3 +1,5 @@
+// TODO: fix rotation
+
 function getBufferMappings(type, rotation){
   if(!rotation){rotation = 0}
   rotation = rotation % 360
@@ -29,17 +31,24 @@ function getOffsets(type, rotation){
 
 function getOriginalStartPoint(type, rotation){
   // the positions from which relative addressing is used for the whole block, left first and then up first corner
-  const originalHinges = {  // [row, column]
-    'i':{0:[4, 2],  90:[2, 7],  180:[4, 10],    270:[2, 15]},
-    'j':{0:[7, 2],  90:[6, 7],  180:[7, 10],    270:[6, 15]},
-    'l':{0:[11, 2], 90:[10, 7], 180:[12, 10],   270:[10, 15]},
-    'o':{0:[15, 2], 90:[15, 6], 180:[15, 10],   270:[15, 14]},
-    's':{0:[19, 3], 90:[18, 6], 180:[19, 11],   270:[18, 14]},
-    't':{0:[23, 2], 90:[22, 7], 180:[24, 11],   270:[22, 15]},
-    'z':{0:[27, 2], 90:[26, 7], 180:[27, 2],    270:[26, 7]}
+  const types = {  
+    'i': 3,
+    'j': 7,
+    'l': 11,
+    'o': 15,
+    's': 19,
+    't': 23,
+    'z': 27
   }
   
-  return originalHinges[type][rotation]
+  const rotations = {
+    0:   3,
+    90:  7,
+    180: 11,
+    270: 15
+  }
+  
+  return [types[type], rotations[rotation]]
 }
 
 
@@ -107,8 +116,8 @@ function Container(type) {
   }
   
   this.rotate = function(){
-    this.rotation = this.rotation + 90
     this.clearTile()
+    this.rotation = (this.rotation + 90) % 360
     this.pasteTile()
   }
   
