@@ -3,7 +3,7 @@
 function getBufferMappings(type, rotation){
   if(!rotation){rotation = 0}
   rotation = rotation % 360
-  const mappings =  {  // [rowOffset, colOffset] from the hinge
+  const mappings =  {  // TODO: make this like the offsets, love it
     'i':{0:[[1, 0], [1, 1], [1, 2]], 90:[[3, 0]],         180:[[1, 0], [1, 1], [1, 2]], 270:[[3, 0]]},
     'j':{0:[[1, 0], [1, 1], [2, 2]], 90:[[3, -1], [3, 0]],180:[[2, 0], [2, 1], [2, 2]], 270:[[3, 0],[1, 1]]},
     'l':{0:[[2, 0], [1, 1], [1, 2]], 90:[[3, 0], [3, 1]], 180:[[1, 0], [1, 1], [1, 2]], 270:[[1, 0], [3, 1]]}, 
@@ -16,14 +16,23 @@ function getBufferMappings(type, rotation){
 }
 
 function getOffsets(type, rotation){
-    const offsets = {  // [rowOffset, colOffset, numRows, numCols]
-    'i':{0:[[0, 0, 1, 3]],                90:[[0, 0, 3, 1]],                 180:[[0, 0, 1, 3]],                  270:[[0, 0, 3, 1]]},
-    'j':{0:[[0, 0, 1, 3], [1, 2, 1, 1]],  90:[[0, 0, 1, 1], [-2, 1, 3, 1]],  180:[[0, 0, 1, 1], [1, 0, 1, 3]],    270:[[0, 1, 1, 1], [0, 0, 3, 1]]},  // TODO: fill the rest
-    'l':{0:[[1, 0, 1, 1], [0, 0, 1, 3]],  90:[[0, 0, 3, 1], [2, 1, 1, 1]],   180:[[0, 0, 1, 3], [-1, 2, 1, 1]],   270:[[0, 0, 1, 1], [0, 1, 3, 1]]},
-    'o':{0:[[0, 0, 2, 2]],                90:[[0, 0, 2, 2]],                 180:[[0, 0, 2, 2]],                  270:[[0, 0, 2, 2]]},
-    's':{0:[[0, 0, 1, 2], [1, -1, 1, 2]], 90:[[0, 0, 2, 1], [1, 1, 2, 1]],   180:[[0, 0, 1, 2], [1, -1, 1, 2]],   270:[[0, 0, 2, 1], [1, 1, 2, 1]]},
-    't':{0:[[0, 0, 1, 3], [1, 1, 1, 1]],  90:[[0, 0, 3, 1], [1, 1, 1, 1]],   180:[[0, 0, 1, 3], [-1, 1, 1, 1]],   270:[[0, 0, 3, 1], [1, -1, 1, 1]]},
-    'z':{0:[[0, 0, 1, 2], [1, 1, 1, 2]],  90:[[0, 0, 2, 1], [1, -1, 2, 1]],  180: [[0, 0, 1, 2], [1, 1, 1, 2]],   270:[[0, 0, 2, 1], [1, -1, 2, 1]]}
+    const up    =  [-1, 0]
+    const down  =  [1, 0]
+    const right =  [0, 1]
+    const left  =  [0, -1]
+    const ul    =  [-1, -1]
+    const ll    =  [1, -1]
+    const lr    =  [1, 1]
+    const ur    =  [-1, 1]
+    
+    const offsets = {  // cells around the hinge
+    'i':{0:[left, right],      90:[up, down],       180:[left, right],     270:[up, down]},
+    'j':{0:[left, righ, lr],   90:[up, down, ll],   180:[right, left, ul], 270:[up, down, ur]},
+    'l':{0:[right, left, ll],  90:[up, down, ul],   180:[right, left, ur], 270:[up, down, lr]},
+    'o':{0:[left, ll, down],   90:[left, ll, down], 180:[left, ll, down],  270:[left, ll, down]},
+    's':{0:[left, up, ur],     90:[up, righ, lr],   180:[left, up, ur],    270:[ul, left, down]},
+    't':{0:[right, left, down],90:[left, up, down], 180:[up, right, left], 270:[up, down, right]},
+    'z':{0:[up, ul, right],    90:[down, right, ur],180:[up, ul, right],   270:[up, left, ll]}
   }
   return offsets[type][rotation]
 }
@@ -38,16 +47,14 @@ function getOriginalStartPoint(type, rotation){
     'o': 15,
     's': 19,
     't': 23,
-    'z': 27
+    'z': 28
   }
-  
   const rotations = {
     0:   3,
     90:  7,
     180: 11,
     270: 15
-  }
-  
+  }  
   return [types[type], rotations[rotation]]
 }
 
