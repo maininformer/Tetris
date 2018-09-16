@@ -158,7 +158,7 @@ function Container(type) {
    })
   }
   
-  this.hasClearBuffer = function (){
+  this.hasClearBuffer = function (){  // TODO: map reduce this
     buffers = this.getBuffers()
     for(var i=0; i<buffers.length; i++){
       buffer = buffers[i]
@@ -172,22 +172,19 @@ function Container(type) {
   }
   
   this.save = function() {
-    var colorPattern = board
-      .getRange(this.range.getRow(), this.range.getColumn(), this.numRows, this.numColumns)
-      .getBackgrounds()
-      .map(function(row){
-        return row.map(function(cell){
-          if(cell == '#ffffff'){
-            return ''
-          } else {
-            return 1
-          }
-        })
+    // get the ranges
+    const ranges = getOffsets(this.type, this.rotation)
+      .map(function(offset){
+        return this.hinge.offset(offset[0], offset[1])
+      }, this)
+      .push(this.hinge)
+    ranges    
+      .forEach(function(range){
+        if(range.getBackground() !== '#ffffff'){
+          board_
+            .getRange(range.getRow(), range.getColumn())
+            .setValue(1)
+        } 
       })
-    board_
-      .getRange(this.range.getRow(), this.range.getColumn(), this.numRows, this.numColumns)
-      .setValues(colorPattern)
-    
   }
-  
 }
