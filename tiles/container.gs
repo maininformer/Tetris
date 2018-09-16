@@ -1,21 +1,7 @@
-// TODO: fix rotation
-
-function getBufferMappings(type, rotation){
-  if(!rotation){rotation = 0}
-  rotation = rotation % 360
-  const mappings =  {  // TODO: make this like the offsets, love it
-    'i':{0:[[1, 0], [1, 1], [1, 2]], 90:[[3, 0]],         180:[[1, 0], [1, 1], [1, 2]], 270:[[3, 0]]},
-    'j':{0:[[1, 0], [1, 1], [2, 2]], 90:[[3, -1], [3, 0]],180:[[2, 0], [2, 1], [2, 2]], 270:[[3, 0],[1, 1]]},
-    'l':{0:[[2, 0], [1, 1], [1, 2]], 90:[[3, 0], [3, 1]], 180:[[1, 0], [1, 1], [1, 2]], 270:[[1, 0], [3, 1]]}, 
-    'o':{0:[[2, 0], [2, 1]],         90:[[2, 0], [2, 1]], 180:[[2, 0], [2, 1]],         270:[[2, 0], [2, 1]]},
-    's':{0:[[2, -1], [2, 0], [2, 1]],90:[[2, 0], [3, 1]], 180:[[2, -1], [2, 0], [2, 1]],270:[[2, 0], [3, 1]]},
-    't':{0:[[1, 0], [2, 1], [1, 2]], 90:[[3, 0], [2, 1]], 180:[[1, 0], [1, 1], [1, 2]], 270:[[3, -1], [3, 0]]},
-    'z':{0:[[1, 0], [2, 1], [2, 2]], 90:[[2, 0], [1, 1]], 180:[[1, 0], [2, 1], [2, 2]], 270:[[2, 0], [1, 1]]}
-  }
-  return mappings[type][rotation]
-}
-
-function getOffsets(type, rotation){
+function getOffsetOrBuffer(type, rotation, bOro){
+    if(!rotation){rotation = 0}
+    rotation = rotation % 360
+    
     const up    =  [-1, 0]
     const down  =  [1, 0]
     const right =  [0, 1]
@@ -25,18 +11,33 @@ function getOffsets(type, rotation){
     const lr    =  [1, 1]
     const ur    =  [-1, 1]
     
-    const offsets = {  // cells around the hinge
-    'i':{0:[left, right],      90:[up, down],       180:[left, right],     270:[up, down]},
-    'j':{0:[left, righ, lr],   90:[up, down, ll],   180:[right, left, ul], 270:[up, down, ur]},
-    'l':{0:[right, left, ll],  90:[up, down, ul],   180:[right, left, ur], 270:[up, down, lr]},
-    'o':{0:[left, ll, down],   90:[left, ll, down], 180:[left, ll, down],  270:[left, ll, down]},
-    's':{0:[left, up, ur],     90:[up, righ, lr],   180:[left, up, ur],    270:[ul, left, down]},
-    't':{0:[right, left, down],90:[left, up, down], 180:[up, right, left], 270:[up, down, right]},
-    'z':{0:[up, ul, right],    90:[down, right, ur],180:[up, ul, right],   270:[up, left, ll]}
+    const d2  = [2, 0]
+    const d2r = [2, 1]
+    const d2l = [2, -1]
+    
+    const offsets = {  // [[cells], [buffers]]
+    'i':{0:[[left, right], [ll, down, lr]],        90:[[up, down], [d2]],               180:[[left, right], [ll, down, lr]],     270:[[up, down], [d2]]},
+    'j':{0:[[left, right, lr], [ll, down, d2r]],   90:[[up, down, ll], [d2, d2l]],      180:[[right, left, ul], [ll, down, lr]], 270:[[up, down, ur], [right, lr, d2]]},
+    'l':{0:[[right, left, ll], [d2l, down, lr]],   90:[[up, down, ul], [left, ll, d2]], 180:[[right, left, ur], [ll, down, lr]], 270:[[up, down, lr], [ll, d2, d2r]]},
+    'o':{0:[[left, ll, down], [d2l, d2]],          90:[[left, ll, down], [d2l, d2]],    180:[[left, ll, down], [d2l, d2]],       270:[[left, ll, down], [d2l, d2]]},
+    's':{0:[[left, up, ur], [ll, down, right]],    90:[[up, right, lr], [down, d2r]],   180:[[left, up, ur], [ll, down, right]], 270:[[up, right, lr], [down, d2r]]},
+    't':{0:[[right, left, down], [ll, d2, lr]],    90:[[left, up, down], [ll, d2]],     180:[[up, right, left], [ll, down, lr]], 270:[[up, down, right], [d2, lr]]},
+    'z':{0:[[up, ul, right], [left, down, lr]],    90:[[down, right, ur], [d2l, down]], 180:[[up, ul, right], [left, down, lr]], 270:[[down, right, ur], [d2l, down]]} 
   }
-  return offsets[type][rotation]
+  if (bOro == 'b'){
+    return offsets[type][rotation][1]
+  } else {
+    return offsets[type][rotation][0]
+  }
 }
 
+function getBufferMappings(type, rotation){
+  return getOffsetOrBuffer(type, rotation, 'b')
+}
+
+function getOffsets(type, rotation){
+    return getOffsetOrBuffer(type, rotation, 'o')
+}
 
 function getOriginalStartPoint(type, rotation){
   // the positions from which relative addressing is used for the whole block, left first and then up first corner
@@ -70,11 +71,12 @@ function Container(type) {
   
   this.pasteTile= function(){
     // Copy a tile from tileHinge, using offsets, to this.hinge using same offsets
-    const tileHinge = tiles.getRange(getOriginalStartPoint(this.type, this.rotation)[0], getOriginalStartPoint(this.type, this.rotation)[1])  
+    const tileHinge = tiles.getRange(getOriginalStartPoint(this.type, this.rotation)[0], getOriginalStartPoint(this.type, this.rotation)[1])
+    tileHinge.copyTo(this.hinge)
     getOffsets(this.type, this.rotation)
     .forEach(function(offset){
-      const newRange = this.hinge.offset(offset[0], offset[1], offset[2], offset[3])
-      tileHinge.offset(offset[0], offset[1], offset[2], offset[3]).copyTo(newRange)
+      const newRange = this.hinge.offset(offset[0], offset[1])
+      tileHinge.offset(offset[0], offset[1]).copyTo(newRange)
     }, this)
   }
 
@@ -104,10 +106,11 @@ function Container(type) {
   }
   
   this.clearTile = function(){
+    this.hinge.setBackground('white')
     getOffsets(this.type, this.rotation)
       .map(function(offset){
         this.hinge
-          .offset(offset[0], offset[1], offset[2], offset[3])
+          .offset(offset[0], offset[1])
           .setBackground('white') 
       }, this)
   }
