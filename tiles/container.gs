@@ -22,7 +22,7 @@ function getOffsetOrBuffer(type, rotation, bOro){
     'o':{0:[[left, ll, down], [d2l, d2]],          90:[[left, ll, down], [d2l, d2]],    180:[[left, ll, down], [d2l, d2]],       270:[[left, ll, down], [d2l, d2]]},
     's':{0:[[left, up, ur], [ll, down, right]],    90:[[up, right, lr], [down, d2r]],   180:[[left, up, ur], [ll, down, right]], 270:[[up, right, lr], [down, d2r]]},
     't':{0:[[right, left, down], [ll, d2, lr]],    90:[[left, up, down], [ll, d2]],     180:[[up, right, left], [ll, down, lr]], 270:[[up, down, right], [d2, lr]]},
-    'z':{0:[[up, ul, right], [left, down, lr]],    90:[[down, right, ur], [d2l, down]], 180:[[up, ul, right], [left, down, lr]], 270:[[down, right, ur], [d2l, down]]} 
+    'z':{0:[[up, ul, right], [left, down, lr]],    90:[[down, right, ur], [d2, lr]],    180:[[up, ul, right], [left, down, lr]], 270:[[down, right, ur], [d2, lr]]} 
   }
   if (bOro == 'b'){
     return offsets[type][rotation][1]
@@ -87,13 +87,13 @@ function Container(type) {
   
   this.getColumnOffset = function (side){
     return {
-      'i':{0:{'right': 2, 'left':0},   90:{'right': 1, 'left':1},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':1}},
-      'j':{0:{'right': 2, 'left':0},   90:{'right': 1, 'left':0},   180:{'right': 2, 'left':0},   270:{'right': 2, 'left':1}},
-      'l':{0:{'right': 2, 'left':0},   90:{'right': 2, 'left':1},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':0}},
-      'o':{0:{'right': 1, 'left':0},   90:{'right': 1, 'left':0},   180:{'right': 1, 'left':0},   270:{'right': 1, 'left':0}},
-      's':{0:{'right': 2, 'left':0},   90:{'right': 1, 'left':0},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':0}},
-      't':{0:{'right': 2, 'left':0},   90:{'right': 2, 'left':1},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':0}},
-      'z':{0:{'right': 2, 'left':0},   90:{'right': 1, 'left':0},   180:{'right': 2, 'left':0},   270:{'right': 1, 'left':0}}
+      'i':{0:{'right': 1, 'left':1},   90:{'right': 0, 'left':0},   180:{'right': 1, 'left':1},   270:{'right': 0, 'left':0}},
+      'j':{0:{'right': 1, 'left':1},   90:{'right': 0, 'left':1},   180:{'right': 1, 'left':1},   270:{'right': 1, 'left':0}},
+      'l':{0:{'right': 1, 'left':1},   90:{'right': 0, 'left':1},   180:{'right': 1, 'left':1},   270:{'right': 1, 'left':0}},
+      'o':{0:{'right': 0, 'left':1},   90:{'right': 0, 'left':1},   180:{'right': 0, 'left':1},   270:{'right': 0, 'left':1}},
+      's':{0:{'right': 1, 'left':1},   90:{'right': 1, 'left':0},   180:{'right': 1, 'left':1},   270:{'right': 1, 'left':0}},
+      't':{0:{'right': 1, 'left':1},   90:{'right': 1, 'left':1},   180:{'right': 1, 'left':1},   270:{'right': 1, 'left':1}},
+      'z':{0:{'right': 1, 'left':1},   90:{'right': 1, 'left':0},   180:{'right': 1, 'left':1},   270:{'right': 1, 'left':0}}
     }[this.type][this.rotation][side]
   }
   
@@ -133,7 +133,7 @@ function Container(type) {
   
   this.updatePosition = function(){
     const movements = getMovements()
-    if (movements.move == 'a' && this.hinge.getColumn() + this.getLeftColumnOffset()> defaults.firstColumn){
+    if (movements.move == 'a' && this.hinge.getColumn() - this.getLeftColumnOffset()> defaults.firstColumn){
       this.move(0, -1)
     } else if (movements.move == 'd' && this.hinge.getColumn() + this.getRightColumnOffset() < defaults.lastColumn){
       this.move(0, 1)
@@ -158,17 +158,12 @@ function Container(type) {
    })
   }
   
-  this.hasClearBuffer = function (){  // TODO: map reduce this
-    buffers = this.getBuffers()
-    for(var i=0; i<buffers.length; i++){
-      buffer = buffers[i]
-      bufferValues = buffer.getValues()[0] // there is always only one row in the buffer
-      if(buffer.getRow() > defaults.boardLastRow){ return false }
-      for(var r=0; r < bufferValues.length; r++){
-        if(bufferValues[r]==1){ return false }
-      }
-      return true
-    }
+  this.hasClearBuffer = function (){
+    return this.getBuffers()
+      .filter(function(buffer){
+        return buffer.getValue() == 1 || buffer.getRow() > defaults.boardLastRow
+      })
+      .length == 0
   }
   
   this.save = function() {
@@ -177,7 +172,7 @@ function Container(type) {
       .map(function(offset){
         return this.hinge.offset(offset[0], offset[1])
       }, this)
-      .push(this.hinge)
+      .concat(this.hinge)
     ranges    
       .forEach(function(range){
         if(range.getBackground() !== '#ffffff'){

@@ -1,23 +1,27 @@
 function start(){
   const tiles = ['i', 'j', 'l', 'o', 's', 't', 'z']
     
-  function getRowSum(){
+  function getRowSums(){
     return defaults
     .board_
     .getRange(
-      block.range.getRow(),
+      defaults.window.getRow(),
       defaults.window.getColumn(),
-      1,
+      defaults.window.getNumRows(),
       defaults.window.getNumColumns())
-    .getValues()[0]
-    .filter(function(a){ return a !== '' })
-    .reduce(function(a, b){ return a + b}, 0)
+    .getValues()
+    .map(function(row){
+      return row
+        .filter(function(a){ return a !== '' })
+        .reduce(function(a, b){ return a + b}, 0)
+    })
   }
   
   upgradeRhino()
   const defaults = getDefaults()
   defaults.window.clear()
   defaults.window_.clear()
+  defaults.score.setValue(0)
   const numColumns = defaults.window.getNumColumns()
   
   while(true){
@@ -25,7 +29,7 @@ function start(){
     block = new Container(tiles[Math.floor(Math.random() * tiles.length)])
     while(block.hasClearBuffer()){
       // move it down every T seconds
-      Utilities.sleep(1500)
+      Utilities.sleep(1000)
       block.updatePosition()
       block.moveDown()
       SpreadsheetApp.flush()
@@ -33,23 +37,22 @@ function start(){
     }
     block.save()
     
-    // check this row
-    var rowSum = getRowSum()
-    if(rowSum == numColumns){
-     animate()
-     // copy paste formatting on the board and board_
-     moveTheTilesDown(block)      
-    }
-
-    
+    // check the rows sums
+    getRowSums()
+      .forEach(function(rowSum, rowIndex){ // add the offset index to the rowIndexes
+        if (rowSum == numColumns){
+          var index = rowIndex + defaults.window.getRow()
+          animate(index)
+          moveTheTilesDown(index)
+        }
+      })
   }
 }
 
 
-function animate(){
+function animate(row){
   const defaults = getDefaults()
   const windowColumns = defaults.window.getNumColumns()
-  const row = block.range.getRow()
   
   var animationRange = defaults.board.getRange(row, defaults.window.getColumn(), 1, windowColumns)
   const colorArray = animationRange.getBackgrounds()
@@ -61,16 +64,17 @@ function animate(){
     Utilities.sleep(100)
     SpreadsheetApp.flush()
   }
+  defaults.score.setValue(defaults.score.getValue() + defaults.scoreIncrement)
 }
 
-function moveTheTilesDown(block){
+function moveTheTilesDown(rowIndex){
   const defaults = getDefaults()
   const board = defaults.board
   const board_ = defaults.board_
   const beginningRow = defaults.window.getRow()
   const beginningCol = defaults.window.getColumn()
-  const numRowsBefore = block.range.getRow() - beginningRow
-  const numRowsAfter = block.range.getRow() - beginningRow + 1
+  const numRowsBefore = rowIndex - beginningRow
+  const numRowsAfter = rowIndex - beginningRow + 1
   const numCols = defaults.window.getNumColumns()
   const emptyRow = new Array(defaults.window.getNumColumns()).fill("")
   
